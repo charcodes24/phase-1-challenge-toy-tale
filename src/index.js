@@ -4,11 +4,11 @@ let toyObjects = 'http://localhost:3000/toys';
 let outerDiv = document.getElementById('toy-collection');
 
 //delete button
-let deleteButton = document.createElement('button');
-deleteButton.classList.add('x-btn');
-deleteButton.setAttribute('id', 'delete')
-deleteButton.innerHTML = 'X'
-console.log(`DELETE BUTTON:`,deleteButton)
+// let deleteButton = document.createElement('button');
+// deleteButton.classList.add('x-btn');
+// deleteButton.setAttribute('id', 'delete')
+// deleteButton.innerHTML = 'X'
+// console.log(`DELETE BUTTON:`,deleteButton)
 
 //function to create HTML elements for each toy
 function createToyCard(element) {
@@ -32,13 +32,38 @@ function createToyCard(element) {
   deleteButton.innerHTML = 'X'
   console.log(`DELETE BUTTON:`,deleteButton)
   toyCard.append(toyName, toyImg, likes, button, deleteButton);
+  deleteButton.addEventListener('click', removeToyCard);
+  //event listener for like button
+  button.addEventListener('click', addLikes);
 };
 
-function removeToyCard() {
-  toyCard.remove();
+function addLikes(event) {
+  console.log(event)
+  console.log(event.target.previousElementSibling)
+  fetch(`${toyObjects}/${event.target.id}`, {
+    method: 'PATCH', 
+    headers: {
+      "content-type": "application/json", 
+      "accept": "application/json"
+    }, 
+    body: JSON.stringify({
+      "likes": parseInt(event.target.previousElementSibling.innerText) + 1
+    }) 
+  })
+  .then(res => res.json())
+  .then(data => {
+    debugger
+    event.target.previousElementSibling.innerText = data.likes;
+  })
 }
 
-deleteButton.addEventListener('click', removeToyCard);
+//function to remove card when delete button is clicked
+function removeToyCard(e) {
+  fetch(toyObjects, {
+    method: 'DELETE',
+  })
+  e.target.parentNode.remove();
+} 
 
 //add toy to page
 function addToyToPage(name, image) {
@@ -56,7 +81,6 @@ function addToyToPage(name, image) {
   })
   .then(res => res.json())
   .then(data => {
-    console.log(data)
     createToyCard(data)
   })
   .catch(error => console.log(error))
@@ -73,13 +97,17 @@ function fetchToyObjects() {
     })
   };
 
-//when docoument laods
   //assign form to variable, listen for submit and addToyToPage
 const toyForm = document.querySelector('.add-toy-form');
 toyForm.addEventListener('submit', (e) => {
   e.preventDefault();
   addToyToPage(e.target.name.value, e.target.image.value)
+  toyForm.reset();
 })
+
+//add likes function PATCH
+
+
 
 
 const addBtn = document.querySelector("#new-toy-btn");
